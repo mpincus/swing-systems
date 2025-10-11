@@ -3,8 +3,8 @@ from pathlib import Path
 
 class Ctx:
     def __init__(self, df: pd.DataFrame):
-        # Use last available trading day from the data
-        self.today = pd.to_datetime(df["Date"].max()).date()
+        # Use pandas Timestamp for arithmetic compatibility
+        self.today = pd.to_datetime(df["Date"].max()).normalize()  # Timestamp @ 00:00 UTC
 
 def _load_state(path: Path) -> pd.DataFrame:
     if Path(path).exists():
@@ -38,29 +38,28 @@ def run_strategy(ctx: Ctx,
         add = pd.DataFrame(entries)
         add = _ensure_cols(add, ["Ticker","EntryDate","EntryPrice","Stop","Target","Status","Notes"])
         if add["EntryDate"].isna().any():
-            add["EntryDate"] = pd.to_datetime(ctx.today)
+            add["EntryDate"] = ctx.today  # Timestamp
         add["Status"] = add["Status"].fillna("open")
         state = pd.concat([state, add[["Ticker","EntryDate","EntryPrice","Stop","Target","Status","Notes"]]], ignore_index=True)
 
     if exits and not state.empty:
         ex = pd.DataFrame(exits)
-        ex["ExitDate"] = pd.to_datetime(ctx.today)
+        ex["ExitDate"] = ctx.today  # Timestamp
         for _, r in ex.iterrows():
             mask = (state["Ticker"] == r["Ticker"]) & (state["Status"] == "open")
             if not mask.any():
                 continue
             idx = state.index[mask][0]
             state.loc[idx, "Status"] = "closed"
-            state.loc[idx, "ExitDate"] = r.get("ExitDate", pd.to_datetime(ctx.today))
+            state.loc[idx, "ExitDate"] = r.get("ExitDate", ctx.today)
             if "ExitPrice" in r:
                 state.loc[idx, "ExitPrice"] = r["ExitPrice"]
-            # append notes
             prev = str(state.loc[idx, "Notes"]) if "Notes" in state.columns else ""
             addn = str(r.get("Notes", ""))
             state.loc[idx, "Notes"] = (prev + ("; " if prev and addn else "") + addn).strip()
 
     # ---- outputs ----
-    day = ctx.today.isoformat()
+    day = ctx.today.date().isoformat()  # YYYY-MM-DD
     entries_df = pd.DataFrame(entries)
     exits_df = pd.DataFrame(exits)
     open_df = state[state["Status"] == "open"].copy()
