@@ -1,22 +1,40 @@
-from __future__ import annotations
 import pandas as pd
 import numpy as np
 
-def rsi(series: pd.Series, length: int = 14) -> pd.Series:
-    delta = series.diff()
-    gain = delta.clip(lower=0)
-    loss = -delta.clip(upper=0)
-    avg_gain = gain.ewm(alpha=1/length, min_periods=length, adjust=False).mean()
-    avg_loss = loss.ewm(alpha=1/length, min_periods=length, adjust=False).mean()
+def _to_num(s: pd.Series) -> pd.Series:
+    return pd.to_numeric(s, errors="coerce")
+
+def sma(s: pd.Series, n: int) -> pd.Series:
+    s = _to_num(s)
+    out = s.rolling(n, min_periods=n).mean()
+    return out.bfill()
+
+def ema(s: pd.Series, n: int) -> pd.Series:
+    s = _to_num(s)
+    out = s.ewm(span=n, adjust=False, min_periods=n).mean()
+    return out.bfill()
+
+def rsi_wilder(close: pd.Series, n: int = 14) -> pd.Series:
+    c = _to_num(close)
+    diff = c.diff()
+    up = diff.clip(lower=0)
+    dn = -diff.clip(upper=0)
+
+    # Wilder's smoothing
+    alpha = 1.0 / n
+    avg_gain = up.ewm(alpha=alpha, adjust=False).mean()
+    avg_loss = dn.ewm(alpha=alpha, adjust=False).mean()
+
     rs = avg_gain / avg_loss.replace(0, np.nan)
-    out = 100 - (100 / (1 + rs))
-    return out.fillna(method="bfill")
+    rsi = 100.0 - (100.0 / (1.0 + rs))
+    return rsi.bfill()
 
-def rolling_low(series: pd.Series, n: int) -> pd.Series:
-    return series.rolling(n).min()
+def atr_wilder(df: pd.DataFrame, n: int = 14) -> pd.Series:
+    h = _to_num(df["High"])
+    l = _to_num(df["Low"])
+    c = _to_num(df["Close"])
+    prev_c = c.shift(1)
 
-def rolling_high(series: pd.Series, n: int) -> pd.Series:
-    return series.rolling(n).max()
-
-def sma(series: pd.Series, n: int) -> pd.Series:
-    return series.rolling(n).mean()
+    tr = pd.concat([(h - l), (h - prev_c).abs(), (l - prev_c).abs()], axis=1).max(axis=1)
+    atr = tr.ewm(alpha=1.0/n, adjust=False).mean()
+    return atr.bfill()
