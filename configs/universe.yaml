@@ -1,3 +1,6 @@
-data_path: data/combined.csv
-out_root: outputs
-state_root: state
+# pick one: sp500, r1000, list
+universe_mode: sp500
+universe: []                # used only if universe_mode: list
+data_path: "data/combined.csv"
+out_root: "outputs"
+state_root: "state"
