@@ -9,36 +9,28 @@ jobs:
   swing:
     runs-on: ubuntu-latest
     timeout-minutes: 90
+    permissions:
+      contents: write   # <-- allow push with GITHUB_TOKEN
 
     steps:
-      # -------------------------------------------------------------------
-      # 1. Checkout code
-      # -------------------------------------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
+          persist-credentials: true
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      # -------------------------------------------------------------------
-      # 2. Set up Python
-      # -------------------------------------------------------------------
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      # -------------------------------------------------------------------
-      # 3. Install package and dependencies
-      # -------------------------------------------------------------------
       - name: Install swing_systems package
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e .
           python -m pip install yfinance pandas numpy pyyaml requests
 
-      # -------------------------------------------------------------------
-      # 4. Build combined.csv (fast)
-      # -------------------------------------------------------------------
       - name: Build combined.csv
         timeout-minutes: 20
         run: |
@@ -51,9 +43,6 @@ jobs:
             --top 150 \
             --multi
 
-      # -------------------------------------------------------------------
-      # 5. Build watchlists
-      # -------------------------------------------------------------------
       - name: Build watchlists per strategy
         run: |
           python -m swing_systems.bin.build_watchlists \
@@ -61,44 +50,30 @@ jobs:
             --outdir configs/watchlists \
             --lookback 90
 
-      # -------------------------------------------------------------------
-      # 6. Run all strategy scanners
-      # -------------------------------------------------------------------
       - name: Run all strategy scanners
         run: |
           python -m swing_systems.bin.run_double_seven \
             --universe configs/universe.yaml \
             --include-file configs/watchlists/double_seven.yaml
-
           python -m swing_systems.bin.run_rsi2_us \
             --universe configs/universe.yaml \
             --include-file configs/watchlists/rsi2_us.yaml
-
           python -m swing_systems.bin.run_rsi2_5_70_sso \
             --universe configs/universe.yaml \
             --include-file configs/watchlists/rsi2_5_70_sso.yaml
-
           python -m swing_systems.bin.run_connors_3d_hl \
             --universe configs/universe.yaml \
             --include-file configs/watchlists/connors_3d_hl.yaml
 
-      # -------------------------------------------------------------------
-      # 7. Package results for GitHub Pages
-      # -------------------------------------------------------------------
       - name: Package results
         run: |
           mkdir -p docs
           echo "" > docs/.nojekyll
           echo "<meta http-equiv='refresh' content='0; url=swing-results-latest.zip'>" > docs/index.html
-
           ZIP_NAME="swing-results-$(date -u +'%Y%m%d').zip"
           zip -r "docs/$ZIP_NAME" outputs state data/combined.csv configs/watchlists
-
           cp "docs/$ZIP_NAME" docs/swing-results-latest.zip
 
-      # -------------------------------------------------------------------
-      # 8. Commit and push updates
-      # -------------------------------------------------------------------
       - name: Commit & push updates
         run: |
           git config user.name "github-actions"
