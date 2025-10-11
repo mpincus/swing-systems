@@ -1,0 +1,3 @@
+data_path: data/combined.csv
+out_root: outputs
+state_root: state
