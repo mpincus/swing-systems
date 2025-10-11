@@ -9,26 +9,6 @@ def load_cfg(p):
     with open(p, "r") as f:
         return yaml.safe_load(f) or {}
 
-def get_universe(mode: str, tickers: list[str]) -> list[str]:
-    mode = (mode or "list").lower()
-    if mode == "sp500":
-        # Wikipedia S&P 500 constituents
-        tables = pd.read_html("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies")
-        df = tables[0]
-        return sorted(df["Symbol"].astype(str).str.replace(".", "-", regex=False).unique().tolist())
-    if mode == "r1000":
-        # Wikipedia Russell 1000 (current list page)
-        tables = pd.read_html("https://en.wikipedia.org/wiki/Russell_1000_Index")
-        # first table with symbols
-        df = max(tables, key=lambda t: t.shape[0])
-        # try common symbol column names
-        for col in ["Ticker", "Symbol", "Ticker symbol"]:
-            if col in df.columns:
-                return sorted(df[col].astype(str).str.replace(".", "-", regex=False).unique().tolist())
-        return []
-    # default: user-specified list
-    return tickers or []
-
 def dl(t, start, end):
     df = yf.download(t, start=start, end=end, interval="1d", auto_adjust=False, progress=False)
     if df.empty:
@@ -44,10 +24,9 @@ def main():
     args = ap.parse_args()
 
     cfg = load_cfg(args.universe)
-    mode = cfg.get("universe_mode", "list")
-    tickers = get_universe(mode, cfg.get("universe", []))
+    tickers = cfg.get("universe", [])
     if not tickers:
-        print("Universe empty. Set universe_mode to sp500/r1000 or provide tickers.", file=sys.stderr)
+        print("Universe is empty. Edit configs/universe.yaml 'universe: [...]'.", file=sys.stderr)
         sys.exit(1)
     print(f"Universe size: {len(tickers)}")
 
@@ -56,8 +35,10 @@ def main():
 
     frames = []
     for t in tickers:
+        print(f"Downloading {t} ...")
         df = dl(t, args.start, args.end)
         if df.empty:
+            print(f"Warning: no data for {t}")
             continue
         df = df.reset_index().rename(columns={
             "Date":"Date","Open":"Open","High":"High","Low":"Low","Close":"Close","Volume":"Volume"
