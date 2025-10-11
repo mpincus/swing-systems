@@ -1,44 +1,56 @@
 name: daily-scan
 on:
   schedule:
-    - cron: "30 22 * * *"
+    - cron: "30 22 * * *"  # runs daily at 22:30 UTC
   workflow_dispatch:
 
 jobs:
   run-scanners:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Install
+
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e .
-      - name: Build per-strategy watchlists from seed universe
+
+      - name: Build combined.csv (download OHLCV)
         run: |
-          python -m swing_systems.bin.build_watchlists --seed configs/seed_universe.txt --outdir configs/generated
-      - name: Build combined.csv for union of watchlists
-        run: |
-          python -m swing_systems.bin.build_data --tickers-file configs/generated/all_tickers.txt --start 2015-01-01 --dst data/combined.csv
-      - name: Ensure output/state folders
+          python -m swing_systems.bin.build_data --universe configs/universe.yaml --start 2015-01-01
+
+      - name: Ensure folders exist
         run: |
           mkdir -p outputs/double_seven outputs/rsi2_us outputs/rsi2_5_70_sso outputs/connors_3d_hl state
+
       - name: Run Double Seven
-        run: python -m swing_systems.bin.run_double_seven --include-file configs/generated/double_seven.txt
+        run: |
+          python -m swing_systems.bin.run_double_seven --config configs/double_seven.yaml --universe configs/universe.yaml
+
       - name: Run RSI2 US
-        run: python -m swing_systems.bin.run_rsi2_us --include-file configs/generated/rsi2_us.txt
+        run: |
+          python -m swing_systems.bin.run_rsi2_us --config configs/rsi2_us.yaml --universe configs/universe.yaml
+
       - name: Run RSI2 5/70 SSO
-        run: python -m swing_systems.bin.run_rsi2_5_70_sso --include-file configs/generated/rsi2_5_70_sso.txt
+        run: |
+          python -m swing_systems.bin.run_rsi2_5_70_sso --config configs/rsi2_5_70_sso.yaml --universe configs/universe.yaml
+
       - name: Run Connors 3DHL
-        run: python -m swing_systems.bin.run_connors_3d_hl --include-file configs/generated/connors_3d_hl.txt
-      - name: Upload outputs
+        run: |
+          python -m swing_systems.bin.run_connors_3d_hl --config configs/connors_3d_hl.yaml --universe configs/universe.yaml
+
+      - name: Upload outputs artifact
         uses: actions/upload-artifact@v4
         with:
           name: swing-outputs-${{ github.run_id }}
           path: |
             outputs/**
             state/**
-            configs/generated/**
             data/combined.csv
