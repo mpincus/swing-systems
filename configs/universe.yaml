@@ -1,4 +1,4 @@
-universe: ["SPY","QQQ","AAPL","MSFT","NVDA","AMZN","META","GOOGL","TSLA","JPM","XOM","AVGO","LLY","UNH","V","MA","HD","BAC","COST","PEP"]
+universe: ["__SP500__"]   # special flag = fetch full S&P 500
 data_path: "data/combined.csv"
 out_root: "outputs"
 state_root: "state"
