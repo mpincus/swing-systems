@@ -1,6 +1,4 @@
-# pick one: sp500, r1000, list
-universe_mode: sp500
-universe: []                # used only if universe_mode: list
+universe: ["SPY","QQQ","AAPL","MSFT","NVDA","AMZN","META","GOOGL","TSLA","JPM","XOM","AVGO","LLY","UNH","V","MA","HD","BAC","COST","PEP"]
 data_path: "data/combined.csv"
 out_root: "outputs"
 state_root: "state"
