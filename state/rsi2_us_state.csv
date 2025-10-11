@@ -1,0 +1,2 @@
+Ticker,EntryDate,EntryPrice,Status,ExitDate,ExitPrice,Notes
+SPY,2025-10-10,653.02001953125,open,,,RSI2<= 10
