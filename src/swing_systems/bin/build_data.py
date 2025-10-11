@@ -1,39 +1,75 @@
-import argparse, sys, io, time, datetime as dt
+import argparse
+import sys
+import io
+import time
+import datetime as dt
 from datetime import date
 from pathlib import Path
 import pandas as pd
 import yfinance as yf
-import requests, yaml
+import requests
+import yaml
+
+
+# ---------- HELPERS ----------
 
 def load_cfg(p):
     with open(p, "r") as f:
         return yaml.safe_load(f) or {}
 
-def get_sp500_list() -> list[str]:
+
+def get_sp500_list():
     url = "https://datahub.io/core/s-and-p-500-companies/r/constituents.csv"
-    r = requests.get(url, timeout=15); r.raise_for_status()
+    r = requests.get(url, timeout=15)
+    r.raise_for_status()
     df = pd.read_csv(io.StringIO(r.text))
-    return sorted(df["Symbol"].astype(str).str.replace(".", "-", regex=False).str.strip().unique().tolist())
+    return sorted(
+        df["Symbol"].astype(str).str.replace(".", "-", regex=False).str.strip().unique().tolist()
+    )
 
-def last_trading_day(utc_today: dt.date) -> dt.date:
-    # simple clamp: Mon=0..Sun=6 → map Sat/Sun to prior Friday
-    wd = utc_today.weekday()
-    if wd == 5:  # Sat
-        return utc_today - dt.timedelta(days=1)
-    if wd == 6:  # Sun
-        return utc_today - dt.timedelta(days=2)
-    return utc_today
 
-def dl_one(t, start, end):
-    try:
-        df = yf.download(t, start=start, end=end, interval="1d", auto_adjust=False, progress=False)
-        if df.empty and start <= end:
-            # fallback small period to tolerate exact-end boundary
-            df = yf.download(t, period="5d", interval="1d", auto_adjust=False, progress=False)
-        return df
-    except Exception as e:
-        print(f"Download error {t}: {e}", file=sys.stderr)
-        return pd.DataFrame()
+def last_trading_day(d: dt.date) -> dt.date:
+    wd = d.weekday()
+    if wd == 5:  # Saturday
+        return d - dt.timedelta(days=1)
+    if wd == 6:  # Sunday
+        return d - dt.timedelta(days=2)
+    return d
+
+
+def quick_vol(tickers):
+    """5-day average volume prefilter."""
+    out = []
+    for t in tickers:
+        df = yf.download(t, period="5d", interval="1d", progress=False)
+        if df.empty:
+            continue
+        out.append((t, float(df["Volume"].tail(5).mean())))
+    out.sort(key=lambda x: x[1], reverse=True)
+    return [t for t, _ in out]
+
+
+def dl_chunk_multi(tickers, start, end):
+    """Batch download multiple tickers at once for speed."""
+    data = yf.download(" ".join(tickers), start=start, end=end, interval="1d",
+                       auto_adjust=False, progress=False, group_by="ticker")
+    if data.empty:
+        return pd.DataFrame(columns=["Date", "Ticker", "Open", "High", "Low", "Close", "Volume"])
+    if isinstance(data.columns, pd.MultiIndex):
+        frames = []
+        for t in tickers:
+            if t not in data.columns.levels[0]:
+                continue
+            g = data[t].reset_index()
+            g["Ticker"] = t
+            frames.append(g[["Date", "Ticker", "Open", "High", "Low", "Close", "Volume"]])
+        return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+    g = data.reset_index()
+    g["Ticker"] = tickers[0]
+    return g[["Date", "Ticker", "Open", "High", "Low", "Close", "Volume"]]
+
+
+# ---------- MAIN ----------
 
 def main():
     ap = argparse.ArgumentParser()
@@ -41,8 +77,10 @@ def main():
     ap.add_argument("--start", default="2015-01-01")
     ap.add_argument("--end", default=str(date.today()))
     ap.add_argument("--dst", default=None)
-    ap.add_argument("--batch", type=int, default=80)
-    ap.add_argument("--sleep", type=float, default=0.25)
+    ap.add_argument("--batch", type=int, default=100)
+    ap.add_argument("--sleep", type=float, default=0.10)
+    ap.add_argument("--top", type=int, default=0, help="keep top-N by 5d avg volume")
+    ap.add_argument("--multi", action="store_true", help="use multi-ticker downloads")
     args = ap.parse_args()
 
     cfg = load_cfg(args.universe)
@@ -50,62 +88,69 @@ def main():
     if "__SP500__" in tickers:
         tickers = get_sp500_list()
     if not tickers:
-        print("Universe empty.", file=sys.stderr); sys.exit(1)
+        print("Universe empty.", file=sys.stderr)
+        sys.exit(1)
 
-    # clamp end to last trading day (UTC)
-    utc_today = dt.date.fromisoformat(args.end) if args.end else date.today()
-    end_day = last_trading_day(utc_today)
+    if args.top and len(tickers) > args.top:
+        print(f"Prefiltering top {args.top} by 5-day avg volume …")
+        tickers = quick_vol(tickers)[:args.top]
+        print(f"Using top {len(tickers)} liquid tickers.")
 
+    end_day = last_trading_day(dt.date.fromisoformat(args.end))
     out_path = Path(args.dst) if args.dst else Path(cfg.get("data_path", "data/combined.csv"))
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # load existing combined, robust dtypes
     have = pd.DataFrame()
     if out_path.exists():
         try:
-            have = pd.read_csv(out_path, parse_dates=["Date"], low_memory=False,
-                               dtype={"Ticker":"string"})
+            have = pd.read_csv(out_path, parse_dates=["Date"], low_memory=False, dtype={"Ticker": "string"})
         except Exception as e:
             print(f"Warning: could not read existing combined.csv: {e}", file=sys.stderr)
             have = pd.DataFrame()
-    have_syms = set(have["Ticker"].astype(str).unique()) if not have.empty else set()
 
     frames = []
     for i in range(0, len(tickers), args.batch):
-        chunk = tickers[i:i+args.batch]
-        print(f"Chunk {i//args.batch+1}/{(len(tickers)+args.batch-1)//args.batch}: {len(chunk)} tickers")
-        for t in chunk:
-            # compute incremental start
-            start_day = dt.date.fromisoformat(args.start)
-            if not have.empty and t in have_syms:
-                last = have.loc[have["Ticker"] == t, "Date"].max()
-                if pd.notna(last):
-                    start_day = (pd.to_datetime(last).date() + dt.timedelta(days=1))
-            if start_day > end_day:
-                continue  # nothing to update
-            df = dl_one(t, start_day.isoformat(), end_day.isoformat())
-            time.sleep(args.sleep)
-            if df.empty:
-                continue
-            df = df.reset_index().rename(columns={
-                "Date":"Date","Open":"Open","High":"High","Low":"Low","Close":"Close","Volume":"Volume"
-            })
-            df["Ticker"] = t
-            frames.append(df[["Date","Ticker","Open","High","Low","Close","Volume"]])
+        chunk = tickers[i:i + args.batch]
+        print(f"Batch {i // args.batch + 1}/{(len(tickers) + args.batch - 1) // args.batch} — {len(chunk)} tickers")
 
-        # flush chunk
+        if args.multi:
+            dfc = dl_chunk_multi(chunk, args.start, end_day.isoformat())
+            if not dfc.empty:
+                frames.append(dfc)
+            time.sleep(args.sleep)
+        else:
+            for t in chunk:
+                df = yf.download(t, start=args.start, end=end_day.isoformat(),
+                                 interval="1d", auto_adjust=False, progress=False)
+                if df.empty:
+                    time.sleep(args.sleep)
+                    continue
+                g = df.reset_index()
+                g["Ticker"] = t
+                frames.append(g[["Date", "Ticker", "Open", "High", "Low", "Close", "Volume"]])
+                time.sleep(args.sleep)
+
         if frames:
             new = pd.concat(frames, ignore_index=True)
             frames = []
-            out = pd.concat([have, new], ignore_index=True) if not have.empty else new
-            out = out.sort_values(["Ticker","Date"])
-            out.to_csv(out_path, index=False)
-            have = out
-            print(f"Saved progress -> {out_path} rows={len(out)}")
+            if not have.empty:
+                combined = pd.concat([have, new], ignore_index=True)
+            else:
+                combined = new
+            combined = (
+                combined.sort_values(["Ticker", "Date"])
+                        .drop_duplicates(subset=["Ticker", "Date"], keep="last")
+            )
+            combined.to_csv(out_path, index=False)
+            have = combined
+            print(f"Saved -> {out_path} rows={len(combined)}")
 
-    if have.empty:
-        print("No data downloaded.", file=sys.stderr); sys.exit(1)
-    print(f"Done. Final rows -> {len(have)} -> {out_path}")
+    if not out_path.exists() or out_path.stat().st_size == 0:
+        print("No data downloaded.", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"Done. Final rows={len(have)} -> {out_path}")
+
 
 if __name__ == "__main__":
     main()
