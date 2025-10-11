@@ -1,40 +1,33 @@
-name: Daily Swing Scan
+name: Daily Scan
 
 on:
   schedule:
-    - cron: "30 22 * * *"
+    - cron: "0 22 * * 1-5"
   workflow_dispatch:
 
 jobs:
-  swing:
+  run:
     runs-on: ubuntu-latest
     timeout-minutes: 90
-    permissions:
-      contents: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          persist-credentials: true
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install swing_systems package
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e .
-          python -m pip install yfinance pandas numpy pyyaml requests
+          pip install -e .
+          pip install pandas numpy yfinance
 
       - name: Build combined.csv
-        timeout-minutes: 20
         run: |
-          START=$(date -u -d '30 days ago' +%F)
+          START=$(date -u -d '300 days ago' +%F)
           python -m swing_systems.bin.build_data \
             --universe configs/universe.yaml \
             --start "$START" \
@@ -43,14 +36,14 @@ jobs:
             --top 150 \
             --multi
 
-      - name: Build watchlists per strategy
+      - name: Build per-strategy watchlists
         run: |
           python -m swing_systems.bin.build_watchlists \
             --combined data/combined.csv \
             --outdir configs/watchlists \
-            --lookback 90
+            --lookback 120
 
-      - name: Run all strategy scanners
+      - name: Run all strategies
         run: |
           python -m swing_systems.bin.run_double_seven \
             --universe configs/universe.yaml \
@@ -65,20 +58,21 @@ jobs:
             --universe configs/universe.yaml \
             --include-file configs/watchlists/connors_3d_hl.yaml
 
-      - name: Package results
+      - name: Package outputs
         run: |
           mkdir -p docs
-          echo "" > docs/.nojekyll
-          echo "<meta http-equiv='refresh' content='0; url=swing-results-latest.zip'>" > docs/index.html
-          ZIP_NAME="swing-results-$(date -u +'%Y%m%d').zip"
-          zip -r "docs/$ZIP_NAME" outputs state data/combined.csv configs/watchlists
-          cp "docs/$ZIP_NAME" docs/swing-results-latest.zip
+          zip -r docs/swing-results-latest.zip outputs state
+          cp docs/swing-results-latest.zip docs/swing-results-$(date -u +%Y%m%d).zip
+          echo "<html><body><a href='swing-results-latest.zip'>Download Latest</a></body></html>" > docs/index.html
+          touch docs/.nojekyll
 
-      - name: Commit & push updates
+      - name: Commit and push results
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add outputs/** state/** docs/** configs/watchlists/**
+          git add outputs/** state/** docs/**
           if git diff --cached --quiet; then
             echo "No changes to commit."
           else
