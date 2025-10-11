@@ -1,7 +1,7 @@
 name: daily-scan
 on:
   schedule:
-    - cron: "30 22 * * *"  # runs daily at 22:30 UTC
+    - cron: "30 22 * * *"
   workflow_dispatch:
 
 jobs:
@@ -32,19 +32,19 @@ jobs:
 
       - name: Run Double Seven
         run: |
-          python -m swing_systems.bin.run_double_seven --config configs/double_seven.yaml --universe configs/universe.yaml
+          python -m swing_systems.bin.run_double_seven --universe configs/universe.yaml
 
       - name: Run RSI2 US
         run: |
-          python -m swing_systems.bin.run_rsi2_us --config configs/rsi2_us.yaml --universe configs/universe.yaml
+          python -m swing_systems.bin.run_rsi2_us --universe configs/universe.yaml
 
       - name: Run RSI2 5/70 SSO
         run: |
-          python -m swing_systems.bin.run_rsi2_5_70_sso --config configs/rsi2_5_70_sso.yaml --universe configs/universe.yaml
+          python -m swing_systems.bin.run_rsi2_5_70_sso --universe configs/universe.yaml
 
       - name: Run Connors 3DHL
         run: |
-          python -m swing_systems.bin.run_connors_3d_hl --config configs/connors_3d_hl.yaml --universe configs/universe.yaml
+          python -m swing_systems.bin.run_connors_3d_hl --universe configs/universe.yaml
 
       - name: Upload outputs artifact
         uses: actions/upload-artifact@v4
