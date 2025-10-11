@@ -1,35 +1,77 @@
 import pandas as pd
 from pathlib import Path
 
-def run_strategy(ctx, signal_fn):
-    data_path = ctx["data_path"]
-    df = pd.read_csv(data_path, parse_dates=["Date"])
+class Ctx:
+    def __init__(self, df: pd.DataFrame):
+        # Use last available trading day from the data
+        self.today = pd.to_datetime(df["Date"].max()).date()
 
-    state_path = ctx["state_path"]
-    state = pd.read_csv(state_path) if Path(state_path).exists() else pd.DataFrame()
+def _load_state(path: Path) -> pd.DataFrame:
+    if Path(path).exists():
+        return pd.read_csv(path, parse_dates=["EntryDate"], low_memory=False)
+    return pd.DataFrame(columns=["Ticker","EntryDate","EntryPrice","Stop","Target","Status","Notes"])
 
-    entries, exits = signal_fn(ctx, state, df)
+def _ensure_cols(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
+    for c in cols:
+        if c not in df.columns:
+            df[c] = pd.NA
+    return df
 
-    if not entries.empty:
-        entries.to_csv(ctx["out_entries"], index=False)
-    if not exits.empty:
-        exits.to_csv(ctx["out_exits"], index=False)
+def _save_csv(df: pd.DataFrame, path: Path):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(path, index=False)
 
-    open_pos = pd.concat([entries, exits]).sort_values("Date")
-    open_pos.to_csv(ctx["out_open"], index=False)
+def run_strategy(ctx: Ctx,
+                 state_path: str | Path,
+                 out_dir: str | Path,
+                 signal_fn):
+    state_path = Path(state_path)
+    out_dir = Path(out_dir)
 
-    add = pd.concat([entries, exits])
-    if "EntryDate" not in add.columns:
-        add["EntryDate"] = pd.NaT
+    state = _load_state(state_path)
 
-    add.to_csv(state_path, index=False)
+    # signal_fn must return (entries:list[dict], exits:list[dict], df_full:pd.DataFrame)
+    entries, exits, _ = signal_fn(ctx, state, None)
 
-def Ctx(universe_file, include_file, strategy_name):
-    return {
-        "data_path": "data/combined.csv",
-        "state_path": f"state/{strategy_name}_state.csv",
-        "out_entries": f"outputs/{strategy_name}/entries.csv",
-        "out_exits": f"outputs/{strategy_name}/exits.csv",
-        "out_open": f"outputs/{strategy_name}/open_positions.csv",
-        "strategy": strategy_name,
-    }
+    # ---- update state ----
+    if entries:
+        add = pd.DataFrame(entries)
+        add = _ensure_cols(add, ["Ticker","EntryDate","EntryPrice","Stop","Target","Status","Notes"])
+        if add["EntryDate"].isna().any():
+            add["EntryDate"] = pd.to_datetime(ctx.today)
+        add["Status"] = add["Status"].fillna("open")
+        state = pd.concat([state, add[["Ticker","EntryDate","EntryPrice","Stop","Target","Status","Notes"]]], ignore_index=True)
+
+    if exits and not state.empty:
+        ex = pd.DataFrame(exits)
+        ex["ExitDate"] = pd.to_datetime(ctx.today)
+        for _, r in ex.iterrows():
+            mask = (state["Ticker"] == r["Ticker"]) & (state["Status"] == "open")
+            if not mask.any():
+                continue
+            idx = state.index[mask][0]
+            state.loc[idx, "Status"] = "closed"
+            state.loc[idx, "ExitDate"] = r.get("ExitDate", pd.to_datetime(ctx.today))
+            if "ExitPrice" in r:
+                state.loc[idx, "ExitPrice"] = r["ExitPrice"]
+            # append notes
+            prev = str(state.loc[idx, "Notes"]) if "Notes" in state.columns else ""
+            addn = str(r.get("Notes", ""))
+            state.loc[idx, "Notes"] = (prev + ("; " if prev and addn else "") + addn).strip()
+
+    # ---- outputs ----
+    day = ctx.today.isoformat()
+    entries_df = pd.DataFrame(entries)
+    exits_df = pd.DataFrame(exits)
+    open_df = state[state["Status"] == "open"].copy()
+
+    _save_csv(entries_df, out_dir / f"entries_{day}.csv")
+    _save_csv(exits_df,   out_dir / f"exits_{day}.csv")
+    _save_csv(open_df,    out_dir / f"open_positions_{day}.csv")
+    _save_csv(state,      state_path)
+
+    print(f"Today: {day}")
+    print(f"Entries: {len(entries_df)} -> {out_dir / f'entries_{day}.csv'}")
+    print(f"Exits:   {len(exits_df)} -> {out_dir / f'exits_{day}.csv'}")
+    print(f"Open:    {len(open_df)} -> {out_dir / f'open_positions_{day}.csv'}")
+    print(f"State:   {state_path}")
