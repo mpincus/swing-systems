@@ -84,16 +84,15 @@ jobs:
           HTML
       # ---------------------------------------
 
-
-- name: Commit and push results + pages
-  run: |
-    git config user.name "github-actions"
-    git config user.email "actions@github.com"
-    # Do NOT commit data/combined.csv (too large). It is included in docs zip only.
-    git add outputs/** state/** docs/**
-    if git diff --cached --quiet; then
-      echo "No changes to commit."
-    else
-      git commit -m "Auto-update results and pages $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
-      git push origin main
-    fi
+      - name: Commit and push results + pages
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          # Do NOT commit data/combined.csv (too large). It's inside docs zip.
+          git add outputs/** state/** docs/**
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Auto-update results and pages $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+            git push origin main
+          fi
