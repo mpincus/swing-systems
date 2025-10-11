@@ -11,25 +11,35 @@ jobs:
     timeout-minutes: 90
 
     steps:
+      # -------------------------------------------------------------------
+      # 1. Checkout code
+      # -------------------------------------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
+      # -------------------------------------------------------------------
+      # 2. Set up Python
+      # -------------------------------------------------------------------
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
+      # -------------------------------------------------------------------
+      # 3. Install package and dependencies
+      # -------------------------------------------------------------------
+      - name: Install swing_systems package
         run: |
           python -m pip install --upgrade pip
+          python -m pip install -e .
           python -m pip install yfinance pandas numpy pyyaml requests
 
-      # ---------------------------------------------------------------------
-      # 1) BUILD DATA
-      # ---------------------------------------------------------------------
-      - name: Build combined.csv (fast)
+      # -------------------------------------------------------------------
+      # 4. Build combined.csv (fast)
+      # -------------------------------------------------------------------
+      - name: Build combined.csv
         timeout-minutes: 20
         run: |
           START=$(date -u -d '30 days ago' +%F)
@@ -41,9 +51,9 @@ jobs:
             --top 150 \
             --multi
 
-      # ---------------------------------------------------------------------
-      # 2) BUILD WATCHLISTS
-      # ---------------------------------------------------------------------
+      # -------------------------------------------------------------------
+      # 5. Build watchlists
+      # -------------------------------------------------------------------
       - name: Build watchlists per strategy
         run: |
           python -m swing_systems.bin.build_watchlists \
@@ -51,9 +61,9 @@ jobs:
             --outdir configs/watchlists \
             --lookback 90
 
-      # ---------------------------------------------------------------------
-      # 3) RUN SCANNERS
-      # ---------------------------------------------------------------------
+      # -------------------------------------------------------------------
+      # 6. Run all strategy scanners
+      # -------------------------------------------------------------------
       - name: Run all strategy scanners
         run: |
           python -m swing_systems.bin.run_double_seven \
@@ -72,10 +82,10 @@ jobs:
             --universe configs/universe.yaml \
             --include-file configs/watchlists/connors_3d_hl.yaml
 
-      # ---------------------------------------------------------------------
-      # 4) PACKAGE OUTPUTS
-      # ---------------------------------------------------------------------
-      - name: Package results for GitHub Pages
+      # -------------------------------------------------------------------
+      # 7. Package results for GitHub Pages
+      # -------------------------------------------------------------------
+      - name: Package results
         run: |
           mkdir -p docs
           echo "" > docs/.nojekyll
@@ -86,9 +96,9 @@ jobs:
 
           cp "docs/$ZIP_NAME" docs/swing-results-latest.zip
 
-      # ---------------------------------------------------------------------
-      # 5) COMMIT CHANGES
-      # ---------------------------------------------------------------------
+      # -------------------------------------------------------------------
+      # 8. Commit and push updates
+      # -------------------------------------------------------------------
       - name: Commit & push updates
         run: |
           git config user.name "github-actions"
