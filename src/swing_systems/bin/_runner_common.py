@@ -22,9 +22,9 @@ def read_include_file(p: str | Path) -> list[str]:
     if not p.exists():
         return []
     if p.suffix.lower() in {".yml", ".yaml"}:
-        cfg = load_config(p)
+        with open(p, "r") as f:
+            cfg = yaml.safe_load(f) or {}
         u = cfg.get("universe", [])
-        # normalize to upper and strip
         return sorted({str(t).strip().upper() for t in u if str(t).strip()})
     # text fallback
     out = []
