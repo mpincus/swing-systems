@@ -31,7 +31,7 @@ jobs:
       - name: Build combined.csv
         timeout-minutes: 30
         run: |
-          START=$(date -u -d '100 days ago' +%F)
+          START=$(date -u -d '5 days ago' +%F)
           python -m swing_systems.bin.build_data \
             --universe configs/universe.yaml \
             --start "$START" \
