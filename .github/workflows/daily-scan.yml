@@ -1,14 +1,14 @@
 name: daily-scan
 on:
   schedule:
-    - cron: "30 22 * * *"   # runs daily at 22:30 UTC
+    - cron: "30 22 * * *"   # daily 22:30 UTC
   workflow_dispatch:
 
 jobs:
   run-scanners:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # allow push back to repo
+      contents: write
 
     steps:
       - name: Checkout repository
@@ -27,27 +27,41 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e .
 
-      # ---------- BUILD DATA ----------
+      # ---------- BUILD DATA (1y back for speed) ----------
       - name: Build combined.csv
         timeout-minutes: 30
         run: |
+          START=$(date -u -d '365 days ago' +%F)
           python -m swing_systems.bin.build_data \
             --universe configs/universe.yaml \
-            --start 2025-01-01 \
+            --start "$START" \
             --batch 80 \
             --sleep 0.25
-      # --------------------------------
+      # ---------------------------------------------------
 
       - name: Ensure folders
         run: |
-          mkdir -p outputs/double_seven outputs/rsi2_us outputs/rsi2_5_70_sso outputs/connors_3d_hl state docs
+          mkdir -p outputs/double_seven outputs/rsi2_us outputs/rsi2_5_70_sso outputs/connors_3d_hl state docs configs/watchlists
 
-      - name: Run scanners
+      # ---------- BUILD WATCHLISTS + RUN STRATEGIES ----------
+      - name: Run scanners with per-strategy watchlists
         run: |
-          python -m swing_systems.bin.run_double_seven --universe configs/universe.yaml
-          python -m swing_systems.bin.run_rsi2_us --universe configs/universe.yaml
-          python -m swing_systems.bin.run_rsi2_5_70_sso --universe configs/universe.yaml
-          python -m swing_systems.bin.run_connors_3d_hl --universe configs/universe.yaml
+          # 1) Build per-strategy watchlists from combined.csv
+          python -m swing_systems.bin.build_watchlists \
+            --combined data/combined.csv \
+            --outdir configs/watchlists \
+            --lookback 90
+
+          # 2) Run each scanner using its own universe
+          python -m swing_systems.bin.run_double_seven \
+            --universe configs/watchlists/double_seven.yaml
+          python -m swing_systems.bin.run_rsi2_us \
+            --universe configs/watchlists/rsi2_us.yaml
+          python -m swing_systems.bin.run_rsi2_5_70_sso \
+            --universe configs/watchlists/rsi2_5_70_sso.yaml
+          python -m swing_systems.bin.run_connors_3d_hl \
+            --universe configs/watchlists/connors_3d_hl.yaml
+      # -------------------------------------------------------
 
       # ---------- ZIP + GITHUB PAGES ----------
       - name: Package results to one zip (for GitHub Pages)
@@ -55,8 +69,8 @@ jobs:
           set -e
           RUN_DATE=$(date -u +%Y%m%d)
           ZIP_NAME="swing-results-${RUN_DATE}.zip"
+          zip -r "$ZIP_NAME" outputs state data/combined.csv configs/watchlists
           mkdir -p docs
-          zip -r "$ZIP_NAME" outputs state data/combined.csv
           mv "$ZIP_NAME" docs/
           cp -f "docs/$ZIP_NAME" docs/swing-results-latest.zip
           touch docs/.nojekyll
@@ -68,8 +82,6 @@ jobs:
           <p><a href="swing-results-latest.zip">Download latest results (zip)</a></p>
           <p>Versioned files are also kept in this folder.</p>
           HTML
-          echo "Docs contents:"
-          ls -la docs
       # ---------------------------------------
 
       - name: Commit and push results + pages
