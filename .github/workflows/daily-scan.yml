@@ -33,7 +33,7 @@ jobs:
         run: |
           python -m swing_systems.bin.build_data \
             --universe configs/universe.yaml \
-            --start 2015-01-01 \
+            --start 2025-01-01 \
             --batch 80 \
             --sleep 0.25
       # --------------------------------
