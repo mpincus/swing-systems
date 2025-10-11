@@ -1,33 +1,35 @@
 import pandas as pd
 from pathlib import Path
 
-class Ctx:
-    def __init__(self, df: pd.DataFrame):
-        self.today = pd.to_datetime(df["Date"].max()).date()
+def run_strategy(ctx, signal_fn):
+    data_path = ctx["data_path"]
+    df = pd.read_csv(data_path, parse_dates=["Date"])
 
-def _load_state(path: Path) -> pd.DataFrame:
-    if path.exists():
-        return pd.read_csv(path, parse_dates=["EntryDate"], low_memory=False)
-    return pd.DataFrame(columns=["Ticker","EntryDate","EntryPrice","Stop","Target","Status","Notes"])
+    state_path = ctx["state_path"]
+    state = pd.read_csv(state_path) if Path(state_path).exists() else pd.DataFrame()
 
-def _save_csv(df: pd.DataFrame, path: Path):
-    path.parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(path, index=False)
+    entries, exits = signal_fn(ctx, state, df)
 
-def run_strategy(ctx: Ctx,
-                 state_path: str | Path,
-                 out_dir: str | Path,
-                 signal_fn):
-    state_path = Path(state_path)
-    out_dir = Path(out_dir)
-    state = _load_state(state_path)
+    if not entries.empty:
+        entries.to_csv(ctx["out_entries"], index=False)
+    if not exits.empty:
+        exits.to_csv(ctx["out_exits"], index=False)
 
-    # signal_fn(ctx, state, dft) must return (entries, exits)
-    # entries/exits are lists of dicts with at least Ticker, EntryPrice/ExitPrice, Notes
-    dft = signal_fn.__self__ if hasattr(signal_fn, "__self__") else None  # not used, but kept for API symmetry
-    entries, exits, dft_full = signal_fn(ctx, state, None) if dft is None else signal_fn(ctx, state, dft)
+    open_pos = pd.concat([entries, exits]).sort_values("Date")
+    open_pos.to_csv(ctx["out_open"], index=False)
 
-    # Update state
-    if entries:
-        add = pd.DataFrame(entries)
-        if "EntryDate" not in add.columns:
+    add = pd.concat([entries, exits])
+    if "EntryDate" not in add.columns:
+        add["EntryDate"] = pd.NaT
+
+    add.to_csv(state_path, index=False)
+
+def Ctx(universe_file, include_file, strategy_name):
+    return {
+        "data_path": "data/combined.csv",
+        "state_path": f"state/{strategy_name}_state.csv",
+        "out_entries": f"outputs/{strategy_name}/entries.csv",
+        "out_exits": f"outputs/{strategy_name}/exits.csv",
+        "out_open": f"outputs/{strategy_name}/open_positions.csv",
+        "strategy": strategy_name,
+    }
