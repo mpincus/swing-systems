@@ -1,21 +1,27 @@
-import argparse
+import pandas as pd
 from pathlib import Path
-from ..common.io import load_config
-from ..common.engine import RunContext, run_strategy
-from ..strategies.rsi2_5_70_sso import prepare, signals
-from ._runner_common import load_data, read_include_file
+from ._runner_common import load_config, load_data, read_include_file
+from ..common.engine import Ctx, run_strategy
+from ..strategies.rsi2_5_70_sso import signals as st_signals, prepare as st_prepare
 
-if __name__ == '__main__':
-    ap = argparse.ArgumentParser()
-    ap.add_argument('--universe', default='configs/universe.yaml')
-    ap.add_argument('--include-file', default='configs/generated/rsi2_5_70_sso.txt')
-    args = ap.parse_args()
+cfg = load_config("configs/universe.yaml")
+data_path = cfg["data_path"]
+out_dir = Path(cfg.get("out_root", "outputs")) / "rsi2_5_70_sso"
+state_path = Path(cfg.get("state_root", "state")) / "rsi2_5_70_sso_state.csv"
 
-    uni = load_config(args.universe)
-    include = read_include_file(args.include_file)
-    df = load_data(uni['data_path'], include)
-    dfp = prepare(df)
-    today = dfp['Date'].max()
+import argparse
+ap = argparse.ArgumentParser()
+ap.add_argument("--universe", default="configs/universe.yaml")
+ap.add_argument("--include-file", default=None)
+args = ap.parse_args()
 
-    ctx = RunContext(dfp, include, Path(uni['out_root'])/'rsi2_5_70_sso', Path(uni['state_root'])/'rsi2_5_70_sso_state.csv', today)
-    run_strategy(ctx, lambda c,s,d: signals(c,s,d))
+include = read_include_file(args.include_file) if args.include_file else []
+df = load_data(data_path, include)
+ctx = Ctx(df)
+
+def adapter(context, state, _):
+    dfp = st_prepare(df)
+    e, x = st_signals(context, state, dfp)
+    return e, x, dfp
+
+run_strategy(ctx, state_path, out_dir, adapter)
