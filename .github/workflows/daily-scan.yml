@@ -1,22 +1,24 @@
 name: daily-scan
 on:
   schedule:
-    - cron: "30 22 * * *"
+    - cron: "30 22 * * *"   # runs daily at 22:30 UTC
   workflow_dispatch:
 
 jobs:
   run-scanners:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: write  # needed to push back to repo
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           persist-credentials: true
           fetch-depth: 0
 
-      - uses: actions/setup-python@v5
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
@@ -40,13 +42,16 @@ jobs:
           python -m swing_systems.bin.run_rsi2_5_70_sso --universe configs/universe.yaml
           python -m swing_systems.bin.run_connors_3d_hl --universe configs/universe.yaml
 
-      - name: Package results to one zip
+      - name: Package results to one zip (for GitHub Pages)
         run: |
+          set -e
           RUN_DATE=$(date -u +%Y%m%d)
           ZIP_NAME="swing-results-${RUN_DATE}.zip"
+          mkdir -p docs
           zip -r "$ZIP_NAME" outputs state data/combined.csv
           mv "$ZIP_NAME" docs/
           cp -f "docs/$ZIP_NAME" docs/swing-results-latest.zip
+          touch docs/.nojekyll
           cat > docs/index.html <<'HTML'
           <!doctype html>
           <meta charset="utf-8">
@@ -55,12 +60,14 @@ jobs:
           <p><a href="swing-results-latest.zip">Download latest results (zip)</a></p>
           <p>Versioned files are also kept in this folder.</p>
           HTML
+          echo "Docs contents:"
+          ls -la docs
 
       - name: Commit and push results + pages
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add data/combined.csv outputs/** state/** docs/**
+          git add -A
           if git diff --cached --quiet; then
             echo "No changes to commit."
           else
