@@ -1,21 +1,20 @@
-name: daily-scan
+name: Daily Swing Scan
+
 on:
   schedule:
-    - cron: "30 22 * * *"   # daily 22:30 UTC
+    - cron: "30 22 * * *"    # runs daily at 22:30 UTC
   workflow_dispatch:
 
 jobs:
-  run-scanners:
+  swing:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    timeout-minutes: 90
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          persist-credentials: true
-          fetch-depth: 0
+          fetch-depth: 1
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -25,34 +24,38 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e .
+          python -m pip install yfinance pandas numpy pyyaml requests
 
-      # ---------- BUILD DATA (1y back for speed) ----------
-      - name: Build combined.csv
-        timeout-minutes: 30
+      # ---------------------------------------------------------------------
+      # 1) BUILD DATA
+      # ---------------------------------------------------------------------
+      - name: Build combined.csv (fast)
+        timeout-minutes: 20
         run: |
-          START=$(date -u -d '5 days ago' +%F)
+          START=$(date -u -d '30 days ago' +%F)
           python -m swing_systems.bin.build_data \
             --universe configs/universe.yaml \
             --start "$START" \
-            --batch 80 \
-            --sleep 0.25
-      # ---------------------------------------------------
+            --batch 200 \
+            --sleep 0.05 \
+            --top 150 \
+            --multi
 
-      - name: Ensure folders
+      # ---------------------------------------------------------------------
+      # 2) BUILD WATCHLISTS
+      # ---------------------------------------------------------------------
+      - name: Build watchlists per strategy
         run: |
-          mkdir -p outputs/double_seven outputs/rsi2_us outputs/rsi2_5_70_sso outputs/connors_3d_hl state docs configs/watchlists
-
-      # ---------- BUILD WATCHLISTS + RUN STRATEGIES ----------
-      - name: Run scanners with per-strategy watchlists
-        run: |
-          # 1) Build per-strategy watchlists from combined.csv
           python -m swing_systems.bin.build_watchlists \
             --combined data/combined.csv \
             --outdir configs/watchlists \
             --lookback 90
 
-          # 2) Run each scanner using base universe.yaml for paths, plus per-strategy include files
+      # ---------------------------------------------------------------------
+      # 3) RUN SCANNERS
+      # ---------------------------------------------------------------------
+      - name: Run all strategy scanners
+        run: |
           python -m swing_systems.bin.run_double_seven \
             --universe configs/universe.yaml \
             --include-file configs/watchlists/double_seven.yaml
@@ -68,38 +71,32 @@ jobs:
           python -m swing_systems.bin.run_connors_3d_hl \
             --universe configs/universe.yaml \
             --include-file configs/watchlists/connors_3d_hl.yaml
-      # -------------------------------------------------------
 
-      # ---------- ZIP + GITHUB PAGES ----------
-      - name: Package results to one zip (for GitHub Pages)
+      # ---------------------------------------------------------------------
+      # 4) PACKAGE OUTPUTS
+      # ---------------------------------------------------------------------
+      - name: Package results for GitHub Pages
         run: |
-          set -e
-          RUN_DATE=$(date -u +%Y%m%d)
-          ZIP_NAME="swing-results-${RUN_DATE}.zip"
-          zip -r "$ZIP_NAME" outputs state data/combined.csv configs/watchlists
           mkdir -p docs
-          mv "$ZIP_NAME" docs/
-          cp -f "docs/$ZIP_NAME" docs/swing-results-latest.zip
-          touch docs/.nojekyll
-          cat > docs/index.html <<'HTML'
-          <!doctype html>
-          <meta charset="utf-8">
-          <title>Swing Systems Downloads</title>
-          <h1>Swing Systems Downloads</h1>
-          <p><a href="swing-results-latest.zip">Download latest results (zip)</a></p>
-          <p>Versioned files are also kept in this folder.</p>
-          HTML
-      # ---------------------------------------
+          echo "" > docs/.nojekyll
+          echo "<meta http-equiv='refresh' content='0; url=swing-results-latest.zip'>" > docs/index.html
 
-      - name: Commit and push results + pages
+          ZIP_NAME="swing-results-$(date -u +'%Y%m%d').zip"
+          zip -r "docs/$ZIP_NAME" outputs state data/combined.csv configs/watchlists
+
+          cp "docs/$ZIP_NAME" docs/swing-results-latest.zip
+
+      # ---------------------------------------------------------------------
+      # 5) COMMIT CHANGES
+      # ---------------------------------------------------------------------
+      - name: Commit & push updates
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          # Do NOT commit data/combined.csv (too large). It's inside docs zip.
           git add outputs/** state/** docs/**
           if git diff --cached --quiet; then
             echo "No changes to commit."
           else
-            git commit -m "Auto-update results and pages $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+            git commit -m "Auto-update results $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
             git push origin main
           fi
