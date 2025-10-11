@@ -1,21 +1,28 @@
-import argparse
+import pandas as pd
 from pathlib import Path
-from ..common.io import load_config
-from ..common.engine import RunContext, run_strategy
-from ..strategies.double_seven import prepare, signals
-from ._runner_common import load_data, read_include_file
+from ._runner_common import load_config, load_data, read_include_file
+from ..common.engine import Ctx, run_strategy
+from ..strategies.double_seven import signals as ds_signals, prepare as ds_prepare
 
-if __name__ == '__main__':
-    ap = argparse.ArgumentParser()
-    ap.add_argument('--universe', default='configs/universe.yaml')
-    ap.add_argument('--include-file', default='configs/generated/double_seven.txt')
-    args = ap.parse_args()
+cfg = load_config("configs/universe.yaml")
+data_path = cfg["data_path"]
+out_dir = Path(cfg.get("out_root", "outputs")) / "double_seven"
+state_path = Path(cfg.get("state_root", "state")) / "double_seven_state.csv"
 
-    uni = load_config(args.universe)
-    include = read_include_file(args.include_file)
-    df = load_data(uni['data_path'], include)
-    dfp = prepare(df)
-    today = dfp['Date'].max()
+import argparse
+ap = argparse.ArgumentParser()
+ap.add_argument("--universe", default="configs/universe.yaml")
+ap.add_argument("--include-file", default=None)
+args = ap.parse_args()
 
-    ctx = RunContext(dfp, include, Path(uni['out_root'])/'double_seven', Path(uni['state_root'])/'double_seven_state.csv', today)
-    run_strategy(ctx, lambda c,s,d: signals(c,s,d))
+include = read_include_file(args.include_file) if args.include_file else []
+df = load_data(data_path, include)
+ctx = Ctx(df)
+
+# strategy adapter to match engine API
+def adapter(context, state, _):
+    dfp = ds_prepare(df)
+    e, x = ds_signals(context, state, dfp)
+    return e, x, dfp
+
+run_strategy(ctx, state_path, out_dir, adapter)
