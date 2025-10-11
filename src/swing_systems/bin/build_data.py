@@ -1,13 +1,32 @@
-import argparse, sys
+import argparse, sys, io
 from datetime import date
 from pathlib import Path
 import pandas as pd
 import yfinance as yf
-import yaml
+import requests, yaml
 
 def load_cfg(p):
     with open(p, "r") as f:
         return yaml.safe_load(f) or {}
+
+def get_sp500_list() -> list[str]:
+    url = "https://datahub.io/core/s-and-p-500-companies/r/constituents.csv"
+    try:
+        r = requests.get(url, timeout=15)
+        r.raise_for_status()
+        df = pd.read_csv(io.StringIO(r.text))
+        syms = (
+            df["Symbol"]
+            .astype(str)
+            .str.strip()
+            .str.replace(".", "-", regex=False)  # Yahoo-style tickers
+            .unique()
+            .tolist()
+        )
+        return sorted(syms)
+    except Exception as e:
+        print(f"Failed to fetch S&P 500 list: {e}", file=sys.stderr)
+        return ["SPY"]  # safe fallback so the job still runs
 
 def dl(t, start, end):
     df = yf.download(t, start=start, end=end, interval="1d", auto_adjust=False, progress=False)
@@ -25,8 +44,10 @@ def main():
 
     cfg = load_cfg(args.universe)
     tickers = cfg.get("universe", [])
+    if "__SP500__" in tickers:
+        tickers = get_sp500_list()
     if not tickers:
-        print("Universe is empty. Edit configs/universe.yaml 'universe: [...]'.", file=sys.stderr)
+        print("Universe empty. Check configs/universe.yaml.", file=sys.stderr)
         sys.exit(1)
     print(f"Universe size: {len(tickers)}")
 
@@ -35,10 +56,8 @@ def main():
 
     frames = []
     for t in tickers:
-        print(f"Downloading {t} ...")
         df = dl(t, args.start, args.end)
         if df.empty:
-            print(f"Warning: no data for {t}")
             continue
         df = df.reset_index().rename(columns={
             "Date":"Date","Open":"Open","High":"High","Low":"Low","Close":"Close","Volume":"Volume"
