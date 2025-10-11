@@ -1,17 +1,18 @@
 import pandas as pd
 from ..common.indicators import sma
 
+def _down_streak_group(g: pd.DataFrame) -> pd.Series:
+    down = (g["High"] < g["High"].shift(1)) & (g["Low"] < g["Low"].shift(1))
+    # run-length counter of consecutive True values
+    groups = (~down).cumsum()
+    return down.astype(int).groupby(groups).cumsum()
+
 def prepare(df: pd.DataFrame, ma_len=200, dma_len=5):
-    out = df.copy().sort_values(["Ticker","Date"])
-    out['MA200'] = out.groupby('Ticker')['Close'].transform(lambda s: sma(s, ma_len))
-    out['DMA5'] = out.groupby('Ticker')['Close'].transform(lambda s: sma(s, dma_len))
-    def down_streak(g):
-        hh = g['High']<g['High'].shift(1)
-        ll = g['Low']<g['Low'].shift(1)
-        down = (hh & ll).astype(int)
-        streak = (down * (down.groupby((down==0).cumsum()).cumcount()+1))
-        return streak
-    out['DownStreak'] = out.groupby('Ticker', group_keys=False).apply(down_streak).reset_index(level=0, drop=True)
+    out = df.copy().sort_values(["Ticker", "Date"])
+    out["MA200"] = out.groupby("Ticker")["Close"].transform(lambda s: sma(s, ma_len))
+    out["DMA5"]  = out.groupby("Ticker")["Close"].transform(lambda s: sma(s, dma_len))
+    # returns a Series, aligns to rows; avoids DataFrame assignment error
+    out["DownStreak"] = out.groupby("Ticker", group_keys=False).apply(_down_streak_group).reset_index(drop=True)
     return out
 
 def signals(ctx, state, dft, time_stop_days=10):
