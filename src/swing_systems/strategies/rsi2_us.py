@@ -1,32 +1,61 @@
 import pandas as pd
 from ..common.indicators import rsi, sma
 
-def prepare(df: pd.DataFrame, rsi_len=2, ma_filter=200, dma5=5):
-    out = df.copy().sort_values(["Ticker","Date"])
-    out[f"RSI{rsi_len}"] = out.groupby("Ticker")["Close"].transform(lambda s: rsi(s, rsi_len))
-    out["MA200"] = out.groupby("Ticker")["Close"].transform(lambda s: sma(s, ma_filter))
-    out["DMA5"] = out.groupby("Ticker")["Close"].transform(lambda s: sma(s, dma5))
+RSI_PERIOD = 2
+RSI_BUY = 5
+RSI_SELL = 70
+MA_LONG = 200
+
+def prepare(df: pd.DataFrame) -> pd.DataFrame:
+    out = df.copy().sort_values(["Ticker", "Date"])
+    # numeric coercion
+    for c in ["Open", "High", "Low", "Close", "Volume"]:
+        if c in out.columns:
+            out[c] = pd.to_numeric(out[c], errors="coerce")
+    # indicators
+    out["RSI2"]  = out.groupby("Ticker")["Close"].transform(lambda s: rsi(s, RSI_PERIOD))
+    out["MA200"] = out.groupby("Ticker")["Close"].transform(lambda s: sma(s, MA_LONG))
     return out
 
-def signals(ctx, state, dft, buy_thr=10, exit_on="rsi_cross", rsi_exit=70, time_stop_days=10):
+def signals(ctx, state, dft: pd.DataFrame):
+    dft = prepare(dft)
+
+    last_day = pd.to_datetime(dft["Date"].dropna().max()).normalize()
+    today_df = dft[dft["Date"] == last_day].copy()
+    # drop NaNs and enforce uptrend
+    today_df = today_df.dropna(subset=["Close", "MA200", "RSI2"])
+    today_df = today_df[today_df["Close"] > today_df["MA200"]]
+
+    open_set = set(state.loc[state["Status"] == "open", "Ticker"]) if not state.empty else set()
+
     entries, exits = [], []
-    open_set = set(state.loc[state["Status"]=="open","Ticker"]) if not state.empty else set()
-    for _, row in dft.iterrows():
-        t = row['Ticker']; c = row['Close']; rv = row.filter(like='RSI').values[0]; ma200 = row['MA200']
-        if pd.notna(rv) and pd.notna(ma200) and (rv <= buy_thr) and (c > ma200) and (t not in open_set):
-            entries.append({"Ticker": t, "EntryDate": ctx.today, "EntryPrice": c, "Notes": f"RSI2<= {buy_thr}"})
-    if not state.empty:
-        merged = dft.merge(state[state['Status']=='open'][['Ticker','EntryDate','EntryPrice']], on='Ticker', how='inner')
-        for _, r in merged.iterrows():
-            exit_signal = False
-            if exit_on == 'rsi_cross':
-                rv = r.filter(like='RSI').values[0]
-                exit_signal = pd.notna(rv) and (rv >= rsi_exit)
-            else:
-                exit_signal = r['Close'] > r['DMA5']
-            if not exit_signal and time_stop_days:
-                held = (ctx.today - pd.to_datetime(r['EntryDate'])).days
-                exit_signal = held >= time_stop_days
-            if exit_signal:
-                exits.append({"Ticker": r['Ticker'], "ExitPrice": r['Close'], "Notes": "RSI2 exit"})
-    return entries, exits
+
+    # ----- ENTRIES: one per ticker, today only -----
+    ent = today_df[today_df["RSI2"] < RSI_BUY][["Ticker", "Date", "Close"]].drop_duplicates(subset=["Ticker"], keep="last")
+    for _, r in ent.iterrows():
+        t = r["Ticker"]
+        if t in open_set:
+            continue
+        entries.append({
+            "Ticker": t,
+            "EntryDate": pd.to_datetime(r["Date"]).normalize(),
+            "EntryPrice": float(r["Close"]),
+            "Notes": f"RSI2<{RSI_BUY}"
+        })
+
+    # ----- EXITS: one per ticker, today only -----
+    if open_set:
+        ex = today_df[
+            (today_df["Ticker"].isin(open_set)) &
+            (today_df["RSI2"] > RSI_SELL)
+        ][["Ticker", "Date", "Close"]].drop_duplicates(subset=["Ticker"], keep="last")
+
+        for _, r in ex.iterrows():
+            exits.append({
+                "Ticker": r["Ticker"],
+                "ExitDate": pd.to_datetime(r["Date"]).normalize(),
+                "ExitPrice": float(r["Close"]),
+                "Notes": f"RSI2>{RSI_SELL}"
+            })
+
+    return entries, exits, dft
