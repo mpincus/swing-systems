@@ -1,111 +1,46 @@
 import pandas as pd
 from pathlib import Path
 
-def _last_business_day(ts: pd.Timestamp) -> pd.Timestamp:
-    while ts.weekday() > 4:
-        ts -= pd.Timedelta(days=1)
-    return ts.normalize()
-
 class Ctx:
-    def __init__(self, df: pd.DataFrame):
-        last = pd.to_datetime(df["Date"].dropna().max()) if (df is not None and "Date" in df.columns) else pd.NaT
-        if pd.isna(last):
-            last = _last_business_day(pd.Timestamp.utcnow())
-        else:
-            last = _last_business_day(last)
-        self.today = last  # pandas Timestamp
+    def __init__(self, df, include_file=None, strategy_name=None):
+        self.df = df
+        self.include_file = include_file
+        self.strategy_name = strategy_name
+        self.today = pd.to_datetime(df["Date"].max()).normalize()
 
-def _load_state(path: Path) -> pd.DataFrame:
-    p = Path(path)
-    if p.exists():
-        df = pd.read_csv(p, low_memory=False)
+def _ensure_dir(p: Path):
+    p.mkdir(parents=True, exist_ok=True)
+
+def run_strategy(ctx, state_path: Path, out_dir: Path, signal_fn):
+    _ensure_dir(out_dir)
+    _ensure_dir(state_path.parent)
+
+    state = pd.read_csv(state_path) if state_path.exists() else pd.DataFrame()
+
+    result = signal_fn(ctx, state, ctx.df)
+    if isinstance(result, tuple):
+        if len(result) == 3:
+            entries, exits, new_state = result
+        elif len(result) == 2:
+            entries, exits = result
+            new_state = state
+        else:
+            raise ValueError(f"signal_fn returned {len(result)} values; expected 2 or 3")
     else:
-        cols = ["Ticker","EntryDate","EntryPrice","Stop","Target","Status","Notes","ExitDate","ExitPrice"]
-        df = pd.DataFrame(columns=cols)
-    # enforce dtypes
-    for c in ["EntryDate","ExitDate"]:
-        if c in df.columns:
-            df[c] = pd.to_datetime(df[c], errors="coerce")
-    return df
+        raise ValueError("signal_fn must return a tuple")
 
-def _ensure_cols(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
-    for c in cols:
-        if c not in df.columns:
-            df[c] = pd.NA
-    return df
+    # defaults
+    if entries is None: entries = pd.DataFrame()
+    if exits   is None: exits   = pd.DataFrame()
+    if new_state is None: new_state = state
 
-def _save_csv(df: pd.DataFrame, path: Path):
-    path = Path(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(path, index=False)
+    day = str(ctx.today.date())
+    (out_dir / f"entries_{day}.csv").write_text(entries.to_csv(index=False))
+    (out_dir / f"exits_{day}.csv").write_text(exits.to_csv(index=False))
 
-def run_strategy(ctx: Ctx,
-                 state_path: str | Path,
-                 out_dir: str | Path,
-                 signal_fn):
-    state_path = Path(state_path)
-    out_dir = Path(out_dir)
-
-    state = _load_state(state_path)
-
-    # signal_fn(ctx, state, df_or_none) -> (entries:list[dict], exits:list[dict], df_full:pd.DataFrame|None)
-    entries, exits, _ = signal_fn(ctx, state, None)
-
-    # ---- add entries ----
-    if entries:
-        add = pd.DataFrame(entries)
-        add = _ensure_cols(add, ["Ticker","EntryDate","EntryPrice","Stop","Target","Status","Notes"])
-        add["EntryDate"] = pd.to_datetime(add["EntryDate"], errors="coerce").dt.normalize()
-        add.loc[add["EntryDate"].isna(), "EntryDate"] = ctx.today
-        add["Status"] = add["Status"].fillna("open")
-        # dedupe: one entry per Ticker/EntryDate
-        add = add.drop_duplicates(subset=["Ticker","EntryDate"], keep="last")
-        state = pd.concat(
-            [state, add[["Ticker","EntryDate","EntryPrice","Stop","Target","Status","Notes"]]],
-            ignore_index=True
-        )
-
-    # ---- apply exits ----
-    if exits and not state.empty:
-        ex = pd.DataFrame(exits)
-        ex = _ensure_cols(ex, ["Ticker","ExitPrice","Notes","ExitDate"])
-        ex["ExitDate"] = pd.to_datetime(ex["ExitDate"], errors="coerce")
-        ex.loc[ex["ExitDate"].isna(), "ExitDate"] = ctx.today
-        ex["ExitDate"] = ex["ExitDate"].dt.normalize()
-
-        if "ExitDate" not in state.columns:
-            state["ExitDate"] = pd.NaT
-        else:
-            state["ExitDate"] = pd.to_datetime(state["ExitDate"], errors="coerce")
-        if "ExitPrice" not in state.columns:
-            state["ExitPrice"] = pd.NA
-
-        for _, r in ex.iterrows():
-            mask = (state["Ticker"] == r["Ticker"]) & (state["Status"] == "open")
-            if not mask.any():
-                continue
-            idx = state.index[mask][0]
-            state.loc[idx, "Status"] = "closed"
-            state.loc[idx, "ExitDate"] = r["ExitDate"]
-            if pd.notna(r.get("ExitPrice", pd.NA)):
-                state.loc[idx, "ExitPrice"] = r["ExitPrice"]
-            prev = str(state.loc[idx, "Notes"]) if "Notes" in state.columns else ""
-            addn = str(r.get("Notes", ""))
-            state.loc[idx, "Notes"] = (prev + ("; " if prev and addn else "") + addn).strip()
-
-    # ---- outputs ----
-    day = ctx.today.date().isoformat()
-    entries_df = pd.DataFrame(entries)
-    exits_df = pd.DataFrame(exits)
-    open_df = state[state.get("Status", pd.Series(dtype=str)) == "open"].copy()
-
-    _save_csv(entries_df, out_dir / f"entries_{day}.csv")
-    _save_csv(exits_df,   out_dir / f"exits_{day}.csv")
-    _save_csv(open_df,    out_dir / f"open_positions_{day}.csv")
-    _save_csv(state,      state_path)
-
+    new_state.to_csv(state_path, index=False)
     print(f"Today: {day}")
-    print(f"Entries: {len(entries_df)} -> {out_dir / f'entries_{day}.csv'}")
-    print(f"Exits:   {len(exits_df)} -> {out_dir / f'exits_{day}.csv'}")
-    print(f"Open:    {len(open_df)} -> {out_dir / f'open_positions_{day}.csv'}")
+    print(f"Entries: {len(entries)} -> {out_dir}/entries_{day}.csv")
+    print(f"Exits:   {len(exits)} -> {out_dir}/exits_{day}.csv")
     print(f"State:   {state_path}")
+    return entries, exits, new_state
