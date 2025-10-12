@@ -2,14 +2,12 @@ import pandas as pd
 from pathlib import Path
 
 def _last_business_day(ts: pd.Timestamp) -> pd.Timestamp:
-    # ensure weekday 0–4
     while ts.weekday() > 4:
         ts -= pd.Timedelta(days=1)
     return ts.normalize()
 
 class Ctx:
     def __init__(self, df: pd.DataFrame):
-        # robust “today”: use last date in df; if NaT/empty, fallback to UTC now -> last business day
         last = pd.to_datetime(df["Date"].dropna().max()) if (df is not None and "Date" in df.columns) else pd.NaT
         if pd.isna(last):
             last = _last_business_day(pd.Timestamp.utcnow())
@@ -57,10 +55,11 @@ def run_strategy(ctx: Ctx,
     if entries:
         add = pd.DataFrame(entries)
         add = _ensure_cols(add, ["Ticker","EntryDate","EntryPrice","Stop","Target","Status","Notes"])
-        add["EntryDate"] = pd.to_datetime(add["EntryDate"], errors="coerce")
+        add["EntryDate"] = pd.to_datetime(add["EntryDate"], errors="coerce").dt.normalize()
         add.loc[add["EntryDate"].isna(), "EntryDate"] = ctx.today
-        add["EntryDate"] = add["EntryDate"].dt.normalize()
         add["Status"] = add["Status"].fillna("open")
+        # dedupe: one entry per Ticker/EntryDate
+        add = add.drop_duplicates(subset=["Ticker","EntryDate"], keep="last")
         state = pd.concat(
             [state, add[["Ticker","EntryDate","EntryPrice","Stop","Target","Status","Notes"]]],
             ignore_index=True
@@ -74,7 +73,6 @@ def run_strategy(ctx: Ctx,
         ex.loc[ex["ExitDate"].isna(), "ExitDate"] = ctx.today
         ex["ExitDate"] = ex["ExitDate"].dt.normalize()
 
-        # ensure state ExitDate/ExitPrice dtypes before assignment
         if "ExitDate" not in state.columns:
             state["ExitDate"] = pd.NaT
         else:
