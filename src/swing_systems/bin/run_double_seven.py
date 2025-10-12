@@ -1,28 +1,39 @@
-import pandas as pd
+import argparse, pandas as pd, yaml
 from pathlib import Path
-from ._runner_common import load_config, load_data, read_include_file
 from ..common.engine import Ctx, run_strategy
-from ..strategies.double_seven import signals as ds_signals, prepare as ds_prepare
+from ..strategies.double_seven import signals as st_signals
 
-cfg = load_config("configs/universe.yaml")
-data_path = cfg["data_path"]
-out_dir = Path(cfg.get("out_root", "outputs")) / "double_seven"
-state_path = Path(cfg.get("state_root", "state")) / "double_seven_state.csv"
+DEF_DATA = "data/combined.csv"
+STRAT = "double_seven"
 
-import argparse
-ap = argparse.ArgumentParser()
-ap.add_argument("--universe", default="configs/universe.yaml")
-ap.add_argument("--include-file", default=None)
-args = ap.parse_args()
+def load_df(universe_yaml: str, include_file: str | None) -> pd.DataFrame:
+    with open(universe_yaml, "r") as f:
+        uni = yaml.safe_load(f) or {}
+    data_path = Path(uni.get("data_path", DEF_DATA))
+    df = pd.read_csv(data_path, parse_dates=["Date"], low_memory=False)
+    if include_file:
+        with open(include_file, "r") as f:
+            inc = yaml.safe_load(f) or {}
+        incl = set(inc.get("universe", []))
+        if incl:
+            df = df[df["Ticker"].isin(incl)]
+    return df
 
-include = read_include_file(args.include_file) if args.include_file else []
-df = load_data(data_path, include)
-ctx = Ctx(df)
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--universe", required=True)
+    ap.add_argument("--include-file", default=None)
+    args = ap.parse_args()
 
-# strategy adapter to match engine API
-def adapter(context, state, _):
-    dfp = ds_prepare(df)
-    e, x = ds_signals(context, state, dfp)
-    return e, x, dfp
+    df = load_df(args.universe, args.include_file)
+    ctx = Ctx(df)
+    out_dir = Path("outputs") / STRAT
+    state_path = Path("state") / f"{STRAT}_state.csv"
 
-run_strategy(ctx, state_path, out_dir, adapter)
+    def adapter(context, state, _unused):
+        return st_signals(context, state, df)
+
+    run_strategy(ctx, state_path, out_dir, adapter)
+
+if __name__ == "__main__":
+    main()
