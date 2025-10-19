@@ -3521,7 +3521,6 @@ AES,,,open
 AES,,,open
 AES,,,open
 AES,,,open
-AES,,,open
 AMAT,,,open
 AMAT,,,open
 AMAT,,,open
@@ -3722,7 +3721,6 @@ AMAT,,,open
 AMAT,,,open
 AMAT,,,open
 AMAT,,,open
-AMAT,,,open
 AMCR,,,open
 AMCR,,,open
 AMCR,,,open
@@ -7248,7 +7246,6 @@ APA,,,open
 APA,,,open
 APA,,,open
 APA,,,open
-APH,,,open
 APH,,,open
 APH,,,open
 APH,,,open
@@ -10154,7 +10151,6 @@ AVGO,,,open
 AVGO,,,open
 AVGO,,,open
 AVGO,,,open
-AVGO,,,open
 BA,,,open
 BA,,,open
 BA,,,open
@@ -20258,7 +20254,6 @@ CTRA,,,open
 CTRA,,,open
 CTRA,,,open
 CTRA,,,open
-CVS,,,open
 CVS,,,open
 CVS,,,open
 CVS,,,open
@@ -22688,7 +22683,6 @@ EBAY,,,open
 EBAY,,,open
 EBAY,,,open
 EBAY,,,open
-EBAY,,,open
 ENPH,,,open
 ENPH,,,open
 ENPH,,,open
@@ -23298,7 +23292,6 @@ EXC,,,open
 EXC,,,open
 EXC,,,open
 EXC,,,open
-F,,,open
 F,,,open
 F,,,open
 F,,,open
@@ -24915,7 +24908,6 @@ GLW,,,open
 GLW,,,open
 GLW,,,open
 GLW,,,open
-GLW,,,open
 GM,,,open
 GM,,,open
 GM,,,open
@@ -25317,8 +25309,6 @@ GOOG,,,open
 GOOG,,,open
 GOOG,,,open
 GOOG,,,open
-GOOG,,,open
-GOOGL,,,open
 GOOGL,,,open
 GOOGL,,,open
 GOOGL,,,open
@@ -33168,7 +33158,6 @@ JNJ,,,open
 JNJ,,,open
 JNJ,,,open
 JNJ,,,open
-JNJ,,,open
 JPM,,,open
 JPM,,,open
 JPM,,,open
@@ -43330,7 +43319,6 @@ MA,,,open
 MA,,,open
 MA,,,open
 MA,,,open
-MCHP,,,open
 MCHP,,,open
 MCHP,,,open
 MCHP,,,open
@@ -47055,7 +47043,6 @@ MNST,,,open
 MNST,,,open
 MNST,,,open
 MNST,,,open
-MNST,,,open
 MO,,,open
 MO,,,open
 MO,,,open
@@ -50986,7 +50973,6 @@ MU,,,open
 MU,,,open
 MU,,,open
 MU,,,open
-MU,,,open
 NCLH,,,open
 NCLH,,,open
 NCLH,,,open
@@ -51390,7 +51376,6 @@ NEE,,,open
 NEE,,,open
 NEE,,,open
 NEE,,,open
-NEM,,,open
 NEM,,,open
 NEM,,,open
 NEM,,,open
@@ -54907,8 +54892,6 @@ ON,,,open
 ON,,,open
 ON,,,open
 ON,,,open
-ON,,,open
-ORCL,,,open
 ORCL,,,open
 ORCL,,,open
 ORCL,,,open
@@ -58421,7 +58404,6 @@ PEP,,,open
 PEP,,,open
 PEP,,,open
 PEP,,,open
-PEP,,,open
 PFE,,,open
 PFE,,,open
 PFE,,,open
@@ -59847,7 +59829,6 @@ QCOM,,,open
 QCOM,,,open
 QCOM,,,open
 QCOM,,,open
-QCOM,,,open
 QQQ,,,open
 QQQ,,,open
 QQQ,,,open
@@ -77468,7 +77449,6 @@ VICI,,,open
 VICI,,,open
 VICI,,,open
 VICI,,,open
-VTRS,,,open
 VTRS,,,open
 VTRS,,,open
 VTRS,,,open
@@ -78076,7 +78056,6 @@ WBD,,,open
 WBD,,,open
 WBD,,,open
 WBD,,,open
-WDC,,,open
 WDC,,,open
 WDC,,,open
 WDC,,,open
