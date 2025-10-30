@@ -2699,7 +2699,6 @@ AAPL,,,open
 AAPL,,,open
 AAPL,,,open
 AAPL,,,open
-AAPL,,,open
 ABBV,,,open
 ABBV,,,open
 ABBV,,,open
@@ -3698,7 +3697,6 @@ AMAT,,,open
 AMAT,,,open
 AMAT,,,open
 AMAT,,,open
-AMAT,,,open
 AMCR,,,open
 AMCR,,,open
 AMCR,,,open
@@ -4099,8 +4097,6 @@ AMD,,,open
 AMD,,,open
 AMD,,,open
 AMD,,,open
-AMD,,,open
-AMZN,,,open
 AMZN,,,open
 AMZN,,,open
 AMZN,,,open
@@ -6997,7 +6993,6 @@ ANET,,,open
 ANET,,,open
 ANET,,,open
 ANET,,,open
-ANET,,,open
 APA,,,open
 APA,,,open
 APA,,,open
@@ -7197,7 +7192,6 @@ APA,,,open
 APA,,,open
 APA,,,open
 APA,,,open
-APH,,,open
 APH,,,open
 APH,,,open
 APH,,,open
@@ -10086,7 +10080,6 @@ AVGO,,,open
 AVGO,,,open
 AVGO,,,open
 AVGO,,,open
-AVGO,,,open
 BA,,,open
 BA,,,open
 BA,,,open
@@ -13392,7 +13385,6 @@ BEN,,,open
 BEN,,,open
 BEN,,,open
 BEN,,,open
-BKR,,,open
 BKR,,,open
 BKR,,,open
 BKR,,,open
@@ -22522,7 +22514,6 @@ EBAY,,,open
 EBAY,,,open
 EBAY,,,open
 EBAY,,,open
-EBAY,,,open
 ENPH,,,open
 ENPH,,,open
 ENPH,,,open
@@ -23725,7 +23716,6 @@ FCX,,,open
 FCX,,,open
 FCX,,,open
 FCX,,,open
-FCX,,,open
 FE,,,open
 FE,,,open
 FE,,,open
@@ -24527,7 +24517,6 @@ GIS,,,open
 GIS,,,open
 GIS,,,open
 GIS,,,open
-GLW,,,open
 GLW,,,open
 GLW,,,open
 GLW,,,open
@@ -25103,8 +25092,6 @@ GOOG,,,open
 GOOG,,,open
 GOOG,,,open
 GOOG,,,open
-GOOG,,,open
-GOOGL,,,open
 GOOGL,,,open
 GOOGL,,,open
 GOOGL,,,open
@@ -27997,7 +27984,6 @@ HAL,,,open
 HAL,,,open
 HAL,,,open
 HAL,,,open
-HAL,,,open
 HBAN,,,open
 HBAN,,,open
 HBAN,,,open
@@ -30911,7 +30897,6 @@ HD,,,open
 HD,,,open
 HD,,,open
 HD,,,open
-HPE,,,open
 HPE,,,open
 HPE,,,open
 HPE,,,open
@@ -32108,7 +32093,6 @@ INTC,,,open
 INTC,,,open
 INTC,,,open
 INTC,,,open
-INTC,,,open
 INVH,,,open
 INVH,,,open
 INVH,,,open
@@ -35613,7 +35597,6 @@ JPM,,,open
 JPM,,,open
 JPM,,,open
 JPM,,,open
-JPM,,,open
 KDP,,,open
 KDP,,,open
 KDP,,,open
@@ -39741,7 +39724,6 @@ LLY,,,open
 LLY,,,open
 LLY,,,open
 LLY,,,open
-LRCX,,,open
 LRCX,,,open
 LRCX,,,open
 LRCX,,,open
@@ -46338,7 +46320,6 @@ META,,,open
 META,,,open
 META,,,open
 META,,,open
-META,,,open
 MGM,,,open
 MGM,,,open
 MGM,,,open
@@ -47751,7 +47732,6 @@ MS,,,open
 MS,,,open
 MS,,,open
 MS,,,open
-MSFT,,,open
 MSFT,,,open
 MSFT,,,open
 MSFT,,,open
@@ -50637,7 +50617,6 @@ MU,,,open
 MU,,,open
 MU,,,open
 MU,,,open
-MU,,,open
 NCLH,,,open
 NCLH,,,open
 NCLH,,,open
@@ -51434,7 +51413,6 @@ NKE,,,open
 NKE,,,open
 NKE,,,open
 NKE,,,open
-NVDA,,,open
 NVDA,,,open
 NVDA,,,open
 NVDA,,,open
@@ -58644,7 +58622,6 @@ PLTR,,,open
 PLTR,,,open
 PLTR,,,open
 PLTR,,,open
-PLTR,,,open
 PM,,,open
 PM,,,open
 PM,,,open
@@ -63158,8 +63135,6 @@ SLB,,,open
 SLB,,,open
 SLB,,,open
 SLB,,,open
-SLB,,,open
-SMCI,,,open
 SMCI,,,open
 SMCI,,,open
 SMCI,,,open
@@ -66268,7 +66243,6 @@ STX,,,open
 STX,,,open
 STX,,,open
 STX,,,open
-STX,,,open
 SW,,,open
 SW,,,open
 SW,,,open
@@ -67477,7 +67451,6 @@ TSCO,,,open
 TSCO,,,open
 TSCO,,,open
 TSCO,,,open
-TSLA,,,open
 TSLA,,,open
 TSLA,,,open
 TSLA,,,open
@@ -77593,8 +77566,6 @@ WBD,,,open
 WBD,,,open
 WBD,,,open
 WBD,,,open
-WBD,,,open
-WDC,,,open
 WDC,,,open
 WDC,,,open
 WDC,,,open
@@ -78389,7 +78360,6 @@ WMT,,,open
 WMT,,,open
 WMT,,,open
 WMT,,,open
-XOM,,,open
 XOM,,,open
 XOM,,,open
 XOM,,,open
