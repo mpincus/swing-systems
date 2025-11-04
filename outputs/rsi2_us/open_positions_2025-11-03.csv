@@ -3692,7 +3692,6 @@ AMAT,,,open
 AMAT,,,open
 AMAT,,,open
 AMAT,,,open
-AMAT,,,open
 AMCR,,,open
 AMCR,,,open
 AMCR,,,open
@@ -6792,7 +6791,6 @@ AMZN,,,open
 AMZN,,,open
 AMZN,,,open
 AMZN,,,open
-AMZN,,,open
 ANET,,,open
 ANET,,,open
 ANET,,,open
@@ -7186,7 +7184,6 @@ APA,,,open
 APA,,,open
 APA,,,open
 APA,,,open
-APH,,,open
 APH,,,open
 APH,,,open
 APH,,,open
@@ -12960,7 +12957,6 @@ BAC,,,open
 BAC,,,open
 BAC,,,open
 BAC,,,open
-BAC,,,open
 BAX,,,open
 BAX,,,open
 BAX,,,open
@@ -13557,7 +13553,6 @@ BKR,,,open
 BKR,,,open
 BKR,,,open
 BKR,,,open
-BKR,,,open
 BMY,,,open
 BMY,,,open
 BMY,,,open
@@ -13965,7 +13960,6 @@ BSX,,,open
 BSX,,,open
 BSX,,,open
 BSX,,,open
-C,,,open
 C,,,open
 C,,,open
 C,,,open
@@ -19700,7 +19694,6 @@ CSCO,,,open
 CSCO,,,open
 CSCO,,,open
 CSCO,,,open
-CSCO,,,open
 CSX,,,open
 CSX,,,open
 CSX,,,open
@@ -22886,7 +22879,6 @@ EQT,,,open
 EQT,,,open
 EQT,,,open
 EQT,,,open
-EQT,,,open
 EXC,,,open
 EXC,,,open
 EXC,,,open
@@ -24083,7 +24075,6 @@ FITB,,,open
 FITB,,,open
 FITB,,,open
 FITB,,,open
-GILD,,,open
 GILD,,,open
 GILD,,,open
 GILD,,,open
@@ -25048,7 +25039,6 @@ GOOG,,,open
 GOOG,,,open
 GOOG,,,open
 GOOG,,,open
-GOOG,,,open
 GOOGL,,,open
 GOOGL,,,open
 GOOGL,,,open
@@ -27739,7 +27729,6 @@ GOOGL,,,open
 GOOGL,,,open
 GOOGL,,,open
 GOOGL,,,open
-GOOGL,,,open
 HAL,,,open
 HAL,,,open
 HAL,,,open
@@ -30849,7 +30838,6 @@ HD,,,open
 HD,,,open
 HD,,,open
 HD,,,open
-HPE,,,open
 HPE,,,open
 HPE,,,open
 HPE,,,open
@@ -39853,7 +39841,6 @@ LRCX,,,open
 LRCX,,,open
 LRCX,,,open
 LRCX,,,open
-LRCX,,,open
 LUV,,,open
 LUV,,,open
 LUV,,,open
@@ -50554,7 +50541,6 @@ MU,,,open
 MU,,,open
 MU,,,open
 MU,,,open
-MU,,,open
 NCLH,,,open
 NCLH,,,open
 NCLH,,,open
@@ -51348,7 +51334,6 @@ NKE,,,open
 NKE,,,open
 NKE,,,open
 NKE,,,open
-NVDA,,,open
 NVDA,,,open
 NVDA,,,open
 NVDA,,,open
@@ -58553,7 +58538,6 @@ PLTR,,,open
 PLTR,,,open
 PLTR,,,open
 PLTR,,,open
-PLTR,,,open
 PM,,,open
 PM,,,open
 PM,,,open
@@ -63065,7 +63049,6 @@ SLB,,,open
 SLB,,,open
 SLB,,,open
 SLB,,,open
-SLB,,,open
 SMCI,,,open
 SMCI,,,open
 SMCI,,,open
@@ -67378,7 +67361,6 @@ TSCO,,,open
 TSCO,,,open
 TSCO,,,open
 TSCO,,,open
-TSLA,,,open
 TSLA,,,open
 TSLA,,,open
 TSLA,,,open
@@ -70683,7 +70665,6 @@ UAL,,,open
 UAL,,,open
 UAL,,,open
 UAL,,,open
-UAL,,,open
 UBER,,,open
 UBER,,,open
 UBER,,,open
@@ -70876,7 +70857,6 @@ UBER,,,open
 UBER,,,open
 UBER,,,open
 UBER,,,open
-UBER,,,open
 UNH,,,open
 UNH,,,open
 UNH,,,open
@@ -76896,7 +76876,6 @@ VICI,,,open
 VICI,,,open
 VICI,,,open
 VICI,,,open
-VTRS,,,open
 VTRS,,,open
 VTRS,,,open
 VTRS,,,open
@@ -77480,7 +77459,6 @@ WBD,,,open
 WBD,,,open
 WBD,,,open
 WBD,,,open
-WBD,,,open
 WDC,,,open
 WDC,,,open
 WDC,,,open
@@ -77670,8 +77648,6 @@ WDC,,,open
 WDC,,,open
 WDC,,,open
 WDC,,,open
-WDC,,,open
-WFC,,,open
 WFC,,,open
 WFC,,,open
 WFC,,,open
@@ -77866,7 +77842,6 @@ WFC,,,open
 WFC,,,open
 WFC,,,open
 WFC,,,open
-WMB,,,open
 WMB,,,open
 WMB,,,open
 WMB,,,open
