@@ -1,2 +1,1 @@
-Date,Ticker,Close,DMA5,Rule
-2025-11-20,TJX,148.07000732421875,145.80999755859375,exit Close>=DMA5
+Ticker,Date,Close
