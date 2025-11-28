@@ -2689,7 +2689,6 @@ AAPL,,,open
 AAPL,,,open
 AAPL,,,open
 AAPL,,,open
-AAPL,,,open
 ABBV,,,open
 ABBV,,,open
 ABBV,,,open
@@ -3659,7 +3658,6 @@ AMAT,,,open
 AMAT,,,open
 AMAT,,,open
 AMAT,,,open
-AMAT,,,open
 AMCR,,,open
 AMCR,,,open
 AMCR,,,open
@@ -6751,8 +6749,6 @@ AMZN,,,open
 AMZN,,,open
 AMZN,,,open
 AMZN,,,open
-AMZN,,,open
-ANET,,,open
 ANET,,,open
 ANET,,,open
 ANET,,,open
@@ -7306,8 +7302,6 @@ APH,,,open
 APH,,,open
 APH,,,open
 APH,,,open
-APH,,,open
-AVGO,,,open
 AVGO,,,open
 AVGO,,,open
 AVGO,,,open
@@ -12884,7 +12878,6 @@ BAC,,,open
 BAC,,,open
 BAC,,,open
 BAC,,,open
-BAC,,,open
 BAX,,,open
 BAX,,,open
 BAX,,,open
@@ -13291,7 +13284,6 @@ BEN,,,open
 BEN,,,open
 BEN,,,open
 BEN,,,open
-BKR,,,open
 BKR,,,open
 BKR,,,open
 BKR,,,open
@@ -13671,7 +13663,6 @@ BMY,,,open
 BMY,,,open
 BMY,,,open
 BMY,,,open
-BMY,,,open
 BSX,,,open
 BSX,,,open
 BSX,,,open
@@ -13869,7 +13860,6 @@ BSX,,,open
 BSX,,,open
 BSX,,,open
 BSX,,,open
-C,,,open
 C,,,open
 C,,,open
 C,,,open
@@ -19773,8 +19763,6 @@ CSX,,,open
 CSX,,,open
 CSX,,,open
 CSX,,,open
-CSX,,,open
-CTRA,,,open
 CTRA,,,open
 CTRA,,,open
 CTRA,,,open
@@ -20151,7 +20139,6 @@ CVS,,,open
 CVS,,,open
 CVS,,,open
 CVS,,,open
-CVS,,,open
 CVX,,,open
 CVX,,,open
 CVX,,,open
@@ -20547,7 +20534,6 @@ CZR,,,open
 CZR,,,open
 CZR,,,open
 CZR,,,open
-D,,,open
 D,,,open
 D,,,open
 D,,,open
@@ -20934,8 +20920,6 @@ DAL,,,open
 DAL,,,open
 DAL,,,open
 DAL,,,open
-DAL,,,open
-DELL,,,open
 DELL,,,open
 DELL,,,open
 DELL,,,open
@@ -22113,7 +22097,6 @@ DVN,,,open
 DVN,,,open
 DVN,,,open
 DVN,,,open
-DVN,,,open
 EBAY,,,open
 EBAY,,,open
 EBAY,,,open
@@ -22692,8 +22675,6 @@ EQT,,,open
 EQT,,,open
 EQT,,,open
 EQT,,,open
-EQT,,,open
-EXC,,,open
 EXC,,,open
 EXC,,,open
 EXC,,,open
@@ -23074,7 +23055,6 @@ F,,,open
 F,,,open
 F,,,open
 F,,,open
-F,,,open
 FAST,,,open
 FAST,,,open
 FAST,,,open
@@ -23277,7 +23257,6 @@ FAST,,,open
 FAST,,,open
 FAST,,,open
 FAST,,,open
-FCX,,,open
 FCX,,,open
 FCX,,,open
 FCX,,,open
@@ -24033,7 +24012,6 @@ GILD,,,open
 GILD,,,open
 GILD,,,open
 GILD,,,open
-GILD,,,open
 GIS,,,open
 GIS,,,open
 GIS,,,open
@@ -24238,7 +24216,6 @@ GIS,,,open
 GIS,,,open
 GIS,,,open
 GIS,,,open
-GLW,,,open
 GLW,,,open
 GLW,,,open
 GLW,,,open
@@ -24600,8 +24577,6 @@ GM,,,open
 GM,,,open
 GM,,,open
 GM,,,open
-GM,,,open
-GOOG,,,open
 GOOG,,,open
 GOOG,,,open
 GOOG,,,open
@@ -27448,7 +27423,6 @@ GOOGL,,,open
 GOOGL,,,open
 GOOGL,,,open
 GOOGL,,,open
-GOOGL,,,open
 HAL,,,open
 HAL,,,open
 HAL,,,open
@@ -27639,7 +27613,6 @@ HAL,,,open
 HAL,,,open
 HAL,,,open
 HAL,,,open
-HBAN,,,open
 HBAN,,,open
 HBAN,,,open
 HBAN,,,open
@@ -30737,7 +30710,6 @@ HPE,,,open
 HPE,,,open
 HPE,,,open
 HPE,,,open
-HPE,,,open
 HPQ,,,open
 HPQ,,,open
 HPQ,,,open
@@ -31142,7 +31114,6 @@ HRL,,,open
 HRL,,,open
 HRL,,,open
 HRL,,,open
-HST,,,open
 HST,,,open
 HST,,,open
 HST,,,open
@@ -31720,7 +31691,6 @@ INTC,,,open
 INTC,,,open
 INTC,,,open
 INTC,,,open
-INTC,,,open
 INVH,,,open
 INVH,,,open
 INVH,,,open
@@ -32326,7 +32296,6 @@ IPG,,,open
 IPG,,,open
 IPG,,,open
 IPG,,,open
-JNJ,,,open
 JNJ,,,open
 JNJ,,,open
 JNJ,,,open
@@ -35188,7 +35157,6 @@ JPM,,,open
 JPM,,,open
 JPM,,,open
 JPM,,,open
-JPM,,,open
 KDP,,,open
 KDP,,,open
 KDP,,,open
@@ -35582,7 +35550,6 @@ KEY,,,open
 KEY,,,open
 KEY,,,open
 KEY,,,open
-KEY,,,open
 KHC,,,open
 KHC,,,open
 KHC,,,open
@@ -35987,7 +35954,6 @@ KMI,,,open
 KMI,,,open
 KMI,,,open
 KMI,,,open
-KO,,,open
 KO,,,open
 KO,,,open
 KO,,,open
@@ -39472,8 +39438,6 @@ LRCX,,,open
 LRCX,,,open
 LRCX,,,open
 LRCX,,,open
-LRCX,,,open
-LUV,,,open
 LUV,,,open
 LUV,,,open
 LUV,,,open
@@ -43146,7 +43110,6 @@ MDT,,,open
 MDT,,,open
 MDT,,,open
 MDT,,,open
-MDT,,,open
 META,,,open
 META,,,open
 META,,,open
@@ -46048,7 +46011,6 @@ MGM,,,open
 MGM,,,open
 MGM,,,open
 MGM,,,open
-MNST,,,open
 MNST,,,open
 MNST,,,open
 MNST,,,open
@@ -46823,7 +46785,6 @@ MRK,,,open
 MRK,,,open
 MRK,,,open
 MRK,,,open
-MRK,,,open
 MRNA,,,open
 MRNA,,,open
 MRNA,,,open
@@ -47028,7 +46989,6 @@ MRNA,,,open
 MRNA,,,open
 MRNA,,,open
 MRNA,,,open
-MS,,,open
 MS,,,open
 MS,,,open
 MS,,,open
@@ -49916,8 +49876,6 @@ MSFT,,,open
 MSFT,,,open
 MSFT,,,open
 MSFT,,,open
-MSFT,,,open
-MU,,,open
 MU,,,open
 MU,,,open
 MU,,,open
@@ -50483,8 +50441,6 @@ NEE,,,open
 NEE,,,open
 NEE,,,open
 NEE,,,open
-NEE,,,open
-NEM,,,open
 NEM,,,open
 NEM,,,open
 NEM,,,open
@@ -53965,7 +53921,6 @@ ON,,,open
 ON,,,open
 ON,,,open
 ON,,,open
-ON,,,open
 ORCL,,,open
 ORCL,,,open
 ORCL,,,open
@@ -54570,7 +54525,6 @@ PANW,,,open
 PANW,,,open
 PANW,,,open
 PANW,,,open
-PCG,,,open
 PCG,,,open
 PCG,,,open
 PCG,,,open
@@ -57448,7 +57402,6 @@ PEP,,,open
 PEP,,,open
 PEP,,,open
 PEP,,,open
-PEP,,,open
 PFE,,,open
 PFE,,,open
 PFE,,,open
@@ -57637,7 +57590,6 @@ PFE,,,open
 PFE,,,open
 PFE,,,open
 PFE,,,open
-PFE,,,open
 PG,,,open
 PG,,,open
 PG,,,open
@@ -57842,7 +57794,6 @@ PG,,,open
 PG,,,open
 PG,,,open
 PG,,,open
-PLTR,,,open
 PLTR,,,open
 PLTR,,,open
 PLTR,,,open
@@ -61729,7 +61680,6 @@ RF,,,open
 RF,,,open
 RF,,,open
 RF,,,open
-RF,,,open
 RTX,,,open
 RTX,,,open
 RTX,,,open
@@ -62128,7 +62078,6 @@ SBUX,,,open
 SBUX,,,open
 SBUX,,,open
 SBUX,,,open
-SCHW,,,open
 SCHW,,,open
 SCHW,,,open
 SCHW,,,open
@@ -66214,7 +66163,6 @@ TFC,,,open
 TFC,,,open
 TFC,,,open
 TFC,,,open
-TFC,,,open
 TGT,,,open
 TGT,,,open
 TGT,,,open
@@ -66419,7 +66367,6 @@ TGT,,,open
 TGT,,,open
 TGT,,,open
 TGT,,,open
-TJX,,,open
 TJX,,,open
 TJX,,,open
 TJX,,,open
@@ -69495,7 +69442,6 @@ TSLA,,,open
 TSLA,,,open
 TSLA,,,open
 TSLA,,,open
-TSLA,,,open
 TTD,,,open
 TTD,,,open
 TTD,,,open
@@ -69904,7 +69850,6 @@ TXN,,,open
 TXN,,,open
 TXN,,,open
 TXN,,,open
-UAL,,,open
 UAL,,,open
 UAL,,,open
 UAL,,,open
@@ -73384,7 +73329,6 @@ USB,,,open
 USB,,,open
 USB,,,open
 USB,,,open
-USB,,,open
 V,,,open
 V,,,open
 V,,,open
@@ -76294,7 +76238,6 @@ VICI,,,open
 VICI,,,open
 VICI,,,open
 VICI,,,open
-VTRS,,,open
 VTRS,,,open
 VTRS,,,open
 VTRS,,,open
@@ -76863,8 +76806,6 @@ WBD,,,open
 WBD,,,open
 WBD,,,open
 WBD,,,open
-WBD,,,open
-WDC,,,open
 WDC,,,open
 WDC,,,open
 WDC,,,open
@@ -77234,8 +77175,6 @@ WFC,,,open
 WFC,,,open
 WFC,,,open
 WFC,,,open
-WFC,,,open
-WMB,,,open
 WMB,,,open
 WMB,,,open
 WMB,,,open
@@ -77427,7 +77366,6 @@ WMB,,,open
 WMB,,,open
 WMB,,,open
 WMB,,,open
-WMT,,,open
 WMT,,,open
 WMT,,,open
 WMT,,,open
