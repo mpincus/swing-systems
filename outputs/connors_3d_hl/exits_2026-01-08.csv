@@ -1,2 +1,1 @@
-Date,Ticker,Close,DMA5,Rule
-2026-01-08,APA,25.3700008392334,24.31199951171875,exit Close>=DMA5
+Ticker,Date,Close
